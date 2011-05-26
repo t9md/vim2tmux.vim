@@ -9,29 +9,29 @@
 " nnoremap <F6> :CursorNext<CR>
 let b:nextline = 1
 
-function! Clear()
-  sign unplace *
-endfunction
+" function! Clear()
+  " sign unplace *
+" endfunction
 
 
-function! CursorNext()
-  " let b:curline  = 11
-  let b:nextline = b:nextline + 1
+" function! CursorNext()
+  " " let b:curline  = 11
+  " let b:nextline = b:nextline + 1
 
-  echohl Function
-  echo getline(b:curline)
-  echohl Normal
+  " echohl Function
+  " echo getline(b:curline)
+  " echohl Normal
 
-  let cmd = "sign place 1 line=".b:nextline." name=NextCmd buffer=".bufnr('%')
-  execute cmd
-endfunction
+  " let cmd = "sign place 1 line=".b:nextline." name=NextCmd buffer=".bufnr('%')
+  " execute cmd
+" endfunction
 
-command! CursorNext :call CursorNext()
+" command! CursorNext :call CursorNext()
 
 
-" function! g:set_tmux_host2pane() range
-" end
-let b:tmux_host2pane = {}
+" " function! g:set_tmux_host2pane() range
+" " end
+" let b:tmux_host2pane = {}
 
 function! s:tmux_host2pane_add(host, pane)
   let b:tmux_host2pane[a:host] = a:pane
