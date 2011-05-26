@@ -62,3 +62,6 @@ Let's try following example.
 ### web02
     service httpd restart
 
+TODO
+==================================
+* cleanup, DRY, elminate unnecessary global var etc.
