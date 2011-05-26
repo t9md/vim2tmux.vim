@@ -8,6 +8,8 @@ THIS IS MY PERSONAL EXPERIMENTAL.
 
 Example
 ==================================
+To try following example, or understand explanation,
+please read this README.md in vim's buffer, not github's renderd html.
 
 Set Hostname and  Tmux's Pane mapping
 ----------------------------------
