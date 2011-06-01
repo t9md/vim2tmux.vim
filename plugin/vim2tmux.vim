@@ -59,6 +59,9 @@ function! s:shell_escape(str)
   return substitute(val, '^\s\+', "", '')
 endfunction
 
+function! g:tmux_send_str(cmd)
+  call system(a:cmd . " Enter")
+endfunction
 
 function! g:tmux_send(...) range
   let selection = a:0 > 0 ? a:000 : getline(a:firstline, a:lastline)
