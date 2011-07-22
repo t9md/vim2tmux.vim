@@ -1,4 +1,4 @@
-" sign define NextCmd text=> texthl=Function
+" sign define NextCmd text=> texthl=Function"{{{
 " sign undefine NextCmd
 
 " finish
@@ -31,7 +31,7 @@ let b:nextline = 1
 
 " " function! g:set_tmux_host2pane() range
 " " end
-" let b:tmux_host2pane = {}
+" let b:tmux_host2pane = {}"}}}
 
 function! s:tmux_host2pane_add(host, pane)
   let b:tmux_host2pane[a:host] = a:pane
@@ -177,6 +177,9 @@ command! -range TmuxSendToCurrentPane :<line1>,<line2>call g:tmux_send_to_curren
 command! -range TmuxSendWithSelectedPane :<line1>,<line2>call g:tmux_send_with_select()
 command! SetBufferToTmuxMode :call g:set_buffer_to_tmux_mode()
 command! -nargs=1 TmuxSetTargetPane :call s:tmux_set_target_pane(<q-args>)
+command! -nargs=0 TmuxShowTask :call tmux#show_task()
+command! -nargs=1 TmuxTaskDo :call tmux#do_task(<f-args>)
+command! -nargs=1 TmuxDo :call tmux#send_key(<q-args>)
 
 function! g:set_buffer_to_tmux_mode()
   " vnoremap <buffer> <silent> <M-t> :TmuxSend<CR>
