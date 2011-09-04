@@ -18,9 +18,9 @@ following are host and pane number pare separated with colon
 You can parse with `TmuxHost2PaneRegister`
 This command set `b:tmux_host2pane`.
 
-    web01: 0   
-    web02: 1   
-    db01 : 2
+    0: web01
+    1: web02
+    2: db01
 
 To view the result, try `echo b:tmux_host2pane`
 

@@ -1,37 +1,53 @@
-" sign define NextCmd text=> texthl=Function"{{{
-" sign undefine NextCmd
+"=============================================================================
+" File: vim2tmux.vim
+" Author: t9md <taqumd@gmail.com>
+" WebPage: http://github.com/t9md/vim2tmux.vim
+" License: BSD
+" Version: 0.1
+"=============================================================================
 
-" finish
-" sign place {id} line={lnum} name={name} file={fname}
-" sign place {id} line={lnum} name={name} file={fname}
-" sign undefine NextCmd
+" GUARD: {{{
+"============================================================
+if exists('g:vim2tmux_dev')
+  unlet! g:loaded_vim2tmux
+endif
 
-" nnoremap <F6> :CursorNext<CR>
-let b:nextline = 1
+if !exists('g:vim2tmux_debug')
+  let g:vim2tmux_debug = 0
+endif
 
-" function! Clear()
-  " sign unplace *
-" endfunction
+" if exists('g:loaded_vim2tmux')
+  " finish
+" endif
+let g:loaded_vim2tmux = 1
 
+let s:old_cpo = &cpo
+set cpo&vim
+" }}}
 
-" function! CursorNext()
-  " " let b:curline  = 11
-  " let b:nextline = b:nextline + 1
+" GlobalVar: {{{
+" }}}
 
-  " echohl Function
-  " echo getline(b:curline)
-  " echohl Normal
+" Keymap: {{{
+nnoremap <silent> <Plug>(vim2tmux-sendline) :<C-u> TmuxSendLine<CR>
+" vnoremap <silent> <Plug>(quickhl-toggle) :call quickhl#toggle('v')<CR>
 
-  " let cmd = "sign place 1 line=".b:nextline." name=NextCmd buffer=".bufnr('%')
-  " execute cmd
-" endfunction
+" nnoremap <silent> <Plug>(quickhl-reset)  :call quickhl#reset()<CR>
+" vnoremap <silent> <Plug>(quickhl-reset)  :call quickhl#reset()<CR>
 
-" command! CursorNext :call CursorNext()
+" nnoremap <silent> <Plug>(quickhl-match) :call quickhl#match("toggle")<CR>
+"}}}
 
+" Command: {{{
+command! TmuxSendLine            :call tmux#sendkey("current", getline("."))
+" command! TmuxSendToCurrentPane  :call tumux#sendkeys()
+" command! TmuxProcess  :call tumux#process()
+" command! TmuxSetup :call tumux#process()
 
-" " function! g:set_tmux_host2pane() range
-" " end
-" let b:tmux_host2pane = {}"}}}
+finish
+command! TmuxShowHost2Pane :call <SID>show_host2pane()
+"}}}
+
 
 function! s:tmux_host2pane_add(host, pane)
   let b:tmux_host2pane[a:host] = a:pane
@@ -59,33 +75,29 @@ function! s:shell_escape(str)
   return substitute(val, '^\s\+', "", '')
 endfunction
 
-function! g:tmux_send_str(cmd)
-  call system(a:cmd . " Enter")
-endfunction
+" function! g:tmux_send(...) range
+  " let selection = a:0 > 0 ? a:000 : getline(a:firstline, a:lastline)
 
-function! g:tmux_send(...) range
-  let selection = a:0 > 0 ? a:000 : getline(a:firstline, a:lastline)
+  " for line in selection
+    " redraw
+    " let result = g:parse_line(line)
 
-  for line in selection
-    redraw
-    let result = g:parse_line(line)
+    " if     result['cmd'] == 'pane'
+      " let g:tmux_target_pane = result['val']
+      " let g:status = "[".result['val']."]" . '[' .result['hostname']. "] "
+      " call s:update_status_line([[g:status, "Function"], ["Set pane","Special"]])
+    " elseif result['cmd'] == 'exe'
+      " let cmd = "tmux send-keys -t".g:tmux_target_pane." '".result['val']."' Enter"
+      " call s:update_status_line([[g:status, "Function"], [result['val'],"Normal"]])
+      " call system(cmd)
 
-    if     result['cmd'] == 'pane'
-      let g:tmux_target_pane = result['val']
-      let g:status = "[".result['val']."]" . '[' .result['hostname']. "] "
-      call s:update_status_line([[g:status, "Function"], ["Set pane","Special"]])
-    elseif result['cmd'] == 'exe'
-      let cmd = "tmux send-keys -t".g:tmux_target_pane." '".result['val']."' Enter"
-      call s:update_status_line([[g:status, "Function"], [result['val'],"Normal"]])
-      call system(cmd)
-
-    elseif result['cmd'] == 'error'
-      echohl Error
-      echoerr result['val']
-      echohl Normal
-    endif
-  endfor
-endfunction
+    " elseif result['cmd'] == 'error'
+      " echohl Error
+      " echoerr result['val']
+      " echohl Normal
+    " endif
+  " endfor
+" endfunction
 
 function! s:update_status_line(messages)
   for [msg, color ] in a:messages
@@ -169,6 +181,7 @@ function! s:tmux_set_target_pane(target_pane)
   let g:tmux_target_pane= a:target_pane
 endfunction
 
+
 " command! -nargs=1 TmuxSetTargetPane :call s:tmux_set_target_pane(<q-args>)
 command! -range TmuxHost2PaneRegister :<line1>,<line2>call s:tmux_host2pane_register()
 command! -range TmuxSend :<line1>,<line2>call g:tmux_send()
@@ -186,3 +199,8 @@ function! g:set_buffer_to_tmux_mode()
   nnoremap <buffer> <silent> <F5>  :TmuxSendAndNextLine<CR>
   " 1split
 endfunction
+
+" FINISH: {{{
+let &cpo = s:old_cpo
+"}}}
+" vim: set fdm=marker:

@@ -1,4 +1,42 @@
-function! tmux#send_keys(cmds) "{{{1
+" Utility: {{{
+function! s:parse_line()
+  let [pane, hostname] = matchlist(getline('.'), '\zs\(\d\+\)\s*:\s*\(\S\+\)')[1:2]
+  let b:host2pane_table[hostname] = pane
+endfunction
+
+function! s:shell_escape(str)
+  let val = substitute(a:str, "'", "'\\\\''", 'g')
+  " strip
+  return substitute(val, '^\s\+', "", '')
+endfunction
+" }}}
+
+" PublicInterface: {{{
+" function! tmux#send_key(cmd) "{{{1
+  " call tmux#send_keys([a:cmd])
+" endfunction
+
+function! tmux#sendkey(pane, cmd)
+  let pane_opt =
+        \ a:pane == "default" ? self.default_pane :
+        \ a:pane == "current" ? "" : "-t" . a:pane_opt
+
+  let cmd_tmpl = "tmux send-keys " . pane_opt . " '%s' Enter"
+  call vimproc#system( printf(cmd_tmpl, s:shell_escape(a:cmd)) )
+endfunction
+finish
+
+let s:tmux2vim = {}
+
+function! s:tmux2vim.set_default_pane(pane)
+  let self.default_pane = a:pane
+endfunction
+
+function! s:tmux2vim.sendkey(pane, cmd)
+  let pane_opt =
+        \ a:pane == "default" ? self.default_pane :
+        \ a:pane == "current" ? "" : a:whre
+
   let cmd_tmpl = "tmux send-keys '%s' Enter"
   let cmds = map(a:cmds, "printf(cmd_tmpl, v:val)")
   for cmd in cmds
@@ -6,55 +44,57 @@ function! tmux#send_keys(cmds) "{{{1
   endfor
 endfunction
 
-function! tmux#send_key(cmd) "{{{1
-  call tmux#send_keys([a:cmd])
+function! s:tmux2vim.status_write(msg)
+  for [msg, color ] in a:messages
+    exe 'echohl '. color
+    echon msg
+    echohl Normal
+  endfor
 endfunction
 
-let s:task = {}
-function s:task.new(name, desc, cmds) "{{{1
-  return { "name": a:name,
-        \ "desc": a:desc,
-        \ "cmds": a:cmds,
-        \ }
+function! s:tmux2vim.process(input)
+  let result = s:parse_line(a:input)
+
+  if result.cmd == 'set_pane'
+
+    let self.target_pane = result.val
+    call self.status_write(["SetPane", "Special"])
+  elseif result['cmd'] == 'exe'
+
+    call self.sendkey(result.val)
+    call self.status_write(["SendKey", "Special"])
+  elseif result['cmd'] == 'error'
+
+    call self.status_write(["Error", "Error"])
+  endif
 endfunction
 
-let s:tmux = {}
-let s:tmux.tasks = []
-
-function! tmux#define_task(name, desc, cmds) "{{{1
-  call add(s:tmux.tasks, s:task.new(a:name, a:desc, a:cmds))
+function! s:show_host2pane()
+  for [host, pane] in items(b:host2pane_table)
+    echo printf("%s => %s", host, pane)
+  endfor
 endfunction
-function! tmux#do_task(name) "{{{1
-  let task = tmux#find_task(a:name)
-  if task == {}
-    echoerr "can't find task '" . a:name . "'"
+command! TmuxShowHost2Pane :call <SID>show_host2pane()
+
+
+function! TmuxParse()
+" ## web01
+      " ls
+" ## web02
+      " curl localhost
+  let hostname = matchstr(getline('.'), '^#\+\s\+\zs\S\+\ze\s*')
+  if empty(hostname)
     return
   endif
-  call tmux#send_keys(task.cmds)
-endfunction
-function! tmux#find_task(name) "{{{1
-  for task in s:tmux.tasks
-    if task.name ==# a:name
-      return task
-    endif
-  endfor
-  return {}
-endfunction
-function! tmux#add_task(task) "{{{1
-  call add(s:tmux.tasks, a:task)
-endfunction
-function! tmux#register_tasks(tasks) "{{{1
-  call tmux#clear_task()
-  for task in a:tasks
-    call tmux#add_task(task)
-  endfor
-endfunction
 
-function! tmux#show_task() "{{{1
-  for task in s:tmux.tasks
-    echo printf("%-8s %-10s %s", task.name . " :", task.desc, string(task.cmds))
-  endfor
+  let pane = get(b:host2pane_table, hostname, -1)
+  if pane == -1
+    return
+  endif
+  echo pane
+  " return {'cmd': 'pane', 'val': pane, 'hostname': hostname }
+  " return {'cmd': 'exe', 'val': s:shell_escape(a:str) }
 endfunction
-function! tmux#clear_task() "{{{1
-  let s:tmux.tasks = []
-endfunction
+" }}}
+
+" vim: set fdm=marker:
